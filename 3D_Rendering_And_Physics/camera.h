@@ -11,7 +11,6 @@ float zBuff[HEIGHT][WIDTH] = { numeric_limits<float>::max() };
 Vec3 directionBuff[HEIGHT][WIDTH];
 Vec3 normalBuff[HEIGHT][WIDTH];
 Uint32 preLightBuff[HEIGHT][WIDTH][3] = { 0 };
-Uint32 postLightBuff[HEIGHT * WIDTH] = { 0 };
 
 //Functions
 bool pointInTriangle(float px, float py, float x1, float y1, float x2, float y2, float x3, float y3) {
@@ -256,10 +255,15 @@ struct Camera {
             renderPolygon(rotMat * body.polys[i] + displVec);
         }
     }
-    void applyLight(vector<LightSource> lights) {
+    void applyLight(vector<LightSource> lights, SDL_Texture* texture) {
         Vec3 directionVec(0), normalVec(0), incidentVec(0), reflectVec(0);
         float illumSum(0), glossSum(0), gloss(0);
         int red(0), green(0), blue(0);
+
+        void* pixelsPtr; int byteRowLen;
+        SDL_LockTexture(texture, NULL, &pixelsPtr, &byteRowLen);
+        Uint32* pixelArr = static_cast<Uint32*>(pixelsPtr);
+        int rowLen = byteRowLen / sizeof(Uint32);
 
         for (int y = 0; y != HEIGHT; y++) {
             for (int x = 0; x != WIDTH; x++) {
@@ -267,7 +271,10 @@ struct Camera {
                 green = preLightBuff[y][x][1];
                 blue = preLightBuff[y][x][2];
 
-                if (red + green + blue == 0) continue;
+                if (red + green + blue == 0) {
+                    pixelArr[y * rowLen + x] = 0x0;
+                    continue;
+                }
 
                 directionVec = directionBuff[y][x]; //already in eye CS
                 normalVec = normalBuff[y][x];       //already in eye CS
@@ -294,12 +301,13 @@ struct Camera {
                 green = min(green * illumSum + glossSum, 255.f);
                 blue = min(blue * illumSum + glossSum, 255.f);
 
-                postLightBuff[x + y * WIDTH] = rgbToHex(red, green, blue);
+                pixelArr[y * rowLen + x] = rgbToHex(red, green, blue);
             }
         }
+
+        SDL_UnlockTexture(texture);
     }
     void draw(SDL_Texture* texture) {
-        SDL_UpdateTexture(texture, NULL, postLightBuff, WIDTH * sizeof(Uint32));
         SDL_RenderCopy(rend, texture, NULL, NULL);
 
         for (int y = 0; y != HEIGHT; y++) {
@@ -310,7 +318,6 @@ struct Camera {
                 preLightBuff[y][x][0] = 0;
                 preLightBuff[y][x][1] = 0;
                 preLightBuff[y][x][2] = 0;
-                postLightBuff[x + y * WIDTH] = 0;
             }
         }
 

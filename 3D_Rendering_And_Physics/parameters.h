@@ -1,8 +1,8 @@
 #pragma once
 
 const int   FPS = 30;
-const int   WIDTH = 800;
-const int   HEIGHT = 600;
+const int   WIDTH = 1000;
+const int   HEIGHT = 800;
 const int   WINDOW_WIDTH = WIDTH;
 const int   WINDOW_HEIGHT = HEIGHT;
 const float TIMESTEP = 0.01f;

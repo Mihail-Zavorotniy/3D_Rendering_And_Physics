@@ -32,10 +32,6 @@ int main(int argc, char* args[]) {
         return -1;
     }
     SDL_Window* window = SDL_CreateWindow("SDL Tutorial", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == nullptr) {
-        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-        return -1;
-    }
     SDL_Renderer* rend = SDL_CreateRenderer(window, 0, SDL_RENDERER_ACCELERATED);
     SDL_Texture* texture = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -168,18 +164,16 @@ int main(int argc, char* args[]) {
         cam.renderPolygon(polyOY);
         cam.renderPolygon(polyOZ);
         cam.renderShape(hammer);
-        cam.applyLight(lights);
+        cam.applyLight(lights, texture);
         t2 = chrono::system_clock::now().time_since_epoch();
         cout << (t2 - t1) / chrono::milliseconds(1) << "    ";
 
 
         t1 = chrono::system_clock::now().time_since_epoch();
         cam.draw(texture);
+        SDL_RenderPresent(rend);
         t2 = chrono::system_clock::now().time_since_epoch();
         cout << (t2 - t1) / chrono::milliseconds(1) << "\n";
-
-
-        SDL_RenderPresent(rend);
 
         //Camera movement
         cam.readKeyInput();
